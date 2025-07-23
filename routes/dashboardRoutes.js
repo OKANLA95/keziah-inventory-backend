@@ -1,7 +1,7 @@
 // routes/dashboardRoutes.js
 import express from 'express';
 const router = express.Router();
-import Product from '../models/product.js';
+import Product from '../models/Product.js';
 import Notification from '../models/notificationModel.js';
 import Order from '../models/order.js';
 import Activity from '../models/activityModel.js'; // if it exists
