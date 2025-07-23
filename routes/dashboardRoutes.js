@@ -1,6 +1,7 @@
 // routes/dashboardRoutes.js
 import express from 'express';
 const router = express.Router();
+// ✅ Use correct casing to match the filename
 import Product from '../models/Product.js';
 import Notification from '../models/notificationModel.js';
 import Order from '../models/order.js';
