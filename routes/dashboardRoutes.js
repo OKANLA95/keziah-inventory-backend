@@ -2,10 +2,10 @@
 import express from 'express';
 const router = express.Router();
 // ✅ Use correct casing to match the filename
-import Product from '../models/Product.js';
-import Notification from '../models/notificationModel.js';
-import Order from '../models/order.js';
-import Activity from '../models/activityModel.js'; // if it exists
+import Product from '../models/Product.js';            // ✅ correct
+import Notification from '../models/notificationModel.js'; // ✅ correct
+import Order from '../models/Order.js';                // 🔼 Capital "O"
+import Activity from '../models/ActivityModel.js';     // 🔼 Capital "A" and "M"
 
 router.get('/overview', async (req, res) => {
   try {
