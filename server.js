@@ -10,16 +10,18 @@ import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Load environment variables
 dotenv.config();
 
-// Fix __dirname for ES module support
+// Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Setup express and HTTP server
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Setup Socket.io
+// Socket.io setup
 const io = new socketIo(server, {
   cors: {
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -28,35 +30,39 @@ const io = new socketIo(server, {
 });
 app.set('io', io);
 
+// Socket connection listener
 io.on('connection', (socket) => {
-  console.log('📡 Client connected:', socket.id);
+  console.log('📡 Socket connected:', socket.id);
   socket.on('disconnect', () => {
-    console.log('❌ Client disconnected:', socket.id);
+    console.log('❌ Socket disconnected:', socket.id);
   });
 });
 
-// ✅ Middlewares
+// CORS configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.CLIENT_URL,
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    console.log('🌐 Origin:', origin);
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn('🚫 CORS Blocked:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
+
+// Middlewares
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-// ✅ Routes
-import userRoutes from './routes/userRoutes.js';
-import productRoutes from './routes/productRoutes.js';
-import contactRoutes from './routes/contactRoutes.js';
-import cartRoutes from './routes/cartRoutes.js';
-import orderRoutes from './routes/orderRoutes.js';
-import dashboardRoutes from './routes/dashboardRoutes.js';
-import notificationRoutes from './routes/notificationRoutes.js';
-import stockRoutes from './routes/stockRoutes.js';
-import salesRoutes from './routes/salesRoutes.js'; // 🔥 added if missing
-import sampleProducts from './routes/sampleProducts.js';
-
-// ✅ Health & Root Checks
+// Health check
 app.get('/', (req, res) => {
   res.send('🚀 Welcome to the Keziah Inventory API!');
 });
@@ -65,7 +71,19 @@ app.get('/api', (req, res) => {
   res.send('✅ API root works!');
 });
 
-// ✅ Register Routes
+// Import Routes
+import userRoutes from './routes/userRoutes.js';
+import productRoutes from './routes/productRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
+import cartRoutes from './routes/cartRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import stockRoutes from './routes/stockRoutes.js';
+import salesRoutes from './routes/salesRoutes.js';
+import sampleProducts from './routes/sampleProducts.js';
+
+// Use Routes
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/contact', contactRoutes);
@@ -74,10 +92,10 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/stock', stockRoutes);
-app.use('/api/sales', salesRoutes); // ✅ for /api/sales/summary route
-app.use('/api/sample', sampleProducts); // 👈 endpoint: /api/sample/insert-sample-products
+app.use('/api/sales', salesRoutes);
+app.use('/api/sample', sampleProducts);
 
-// ✅ Global Error Handler
+// Global error handler
 app.use((err, req, res, next) => {
   console.error('❌ Error:', err.stack);
   res.status(err.statusCode || 500).json({
@@ -85,15 +103,19 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ✅ MongoDB Connection & Server Start
+// MongoDB and server startup
 const startServer = async () => {
   try {
+    if (!process.env.MONGO_URI) {
+      throw new Error('MONGO_URI not found in .env');
+    }
+
     await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
 
-    console.log('✅ Connected to MongoDB');
+    console.log('✅ MongoDB connected');
     const PORT = process.env.PORT || 5000;
     server.listen(PORT, () => {
       console.log(`🌍 Server running at http://localhost:${PORT}`);
